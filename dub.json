@@ -1,5 +1,5 @@
 {
-  "name": "catch",
+  "name": "checkit",
   "description": "BDD testing framework for D",
   "copyright": "Copyright © 2017, LLC CERERIS",
   "license": "MIT",
@@ -8,13 +8,13 @@
     "LLC CERERIS"
   ],
   "sourcePaths": ["./source"],
-  "targetName": "catch",
+  "targetName": "checkit",
   "targetType": "library",
   "subPackages": [
     {
       "name": "tests",
-      "targetName": "catch-test",
-      "description": "Tests for catch",
+      "targetName": "checkit-test",
+      "description": "Tests for checkit",
       "targetType": "executable",
       "buildOptions": ["unittests", "coverage"],
       "mainSourceFile": "tests/main.d",

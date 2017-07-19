@@ -4,6 +4,6 @@
   Authors: LLC CERERIS
 */
 
-module catchd;
+module checkit;
 
-public import catchd.assertion;
+public import checkit.assertion;
