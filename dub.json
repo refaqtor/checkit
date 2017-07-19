@@ -1,0 +1,24 @@
+{
+  "name": "catch",
+  "description": "BDD testing framework for D",
+  "copyright": "Copyright © 2017, LLC CERERIS",
+  "license": "MIT",
+  "homepage": "www.cereris.org",
+  "authors": [
+    "LLC CERERIS"
+  ],
+  "sourcePaths": ["./source"],
+  "targetName": "catch",
+  "targetType": "library",
+  "subPackages": [
+    {
+      "name": "tests",
+      "targetName": "catch-test",
+      "description": "Tests for catch",
+      "targetType": "executable",
+      "buildOptions": ["unittests", "coverage"],
+      "mainSourceFile": "tests/main.d",
+      "sourcePaths": ["./source/", "./tests/"]
+    }
+  ]
+}
