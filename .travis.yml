@@ -4,7 +4,7 @@ before_install:
   - sudo wget http://master.dl.sourceforge.net/project/d-apt/files/d-apt.list -O /etc/apt/sources.list.d/d-apt.list
   - wget -qO - https://dlang.org/d-keyring.gpg | sudo apt-key add -
   - sudo apt-get update -qq
-  - sudo apt-get install -qq --force-yes dmd-bin dub dcd dfix dfmt dscanner libphobos2-dev
+  - sudo apt-get install -qq --force-yes dmd-bin dub dcd dfix dfmt dscanner libphobos2-dev libevent-dev
   - wget -O doveralls "https://github.com/ColdenCullen/doveralls/releases/download/v1.3.1/doveralls_linux_travis"
   - chmod +x doveralls
 script:
@@ -13,6 +13,7 @@ script:
   - dscanner --syntaxCheck source
   - dscanner --sloc source
   - dub run checkit:tests
+  - rm tests*.lst
   - ./doveralls
   - dub build --build=ddox
 deploy:

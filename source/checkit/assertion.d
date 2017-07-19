@@ -12,6 +12,7 @@ import core.exception;
 
   Params:
     object = The value that should equal null.
+    message = The exception message.
     file = The file name that the assert failed in. Should be left as default.
     line = The file line that the assert failed in. Should be left as default.
   Throws:
@@ -24,7 +25,7 @@ import core.exception;
     test.shouldBeNull();
     ---
 */
-void shouldBeNull(T)(T object, string message=null, string file=__FILE__, size_t line=__LINE__)
+void shouldBeNull(T)(T object, string message = null, string file = __FILE__, size_t line = __LINE__)
 {
   if(object !is null)
   {
