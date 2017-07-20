@@ -9,8 +9,8 @@ before_install:
   - chmod +x doveralls
 script:
   - dub build
-  - dscanner --styleCheck source
-  - dscanner --syntaxCheck source
+  - dscanner --styleCheck source >/dev/null 2>&1
+  - dscanner --syntaxCheck source >/dev/null 2>&1
   - dscanner --sloc source
   - dub run checkit:tests
   - rm tests*.lst
