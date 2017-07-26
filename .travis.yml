@@ -12,7 +12,7 @@ script:
   - dscanner --styleCheck source 2>&1 || echo "Style check!"
   - dscanner --syntaxCheck source 2>&1 || echo "Syntax check!"
   - dscanner --sloc source
-  - dub run checkit:tests
+  - dub run checkit:test
   - rm test*.lst
   - ./doveralls
   - dub build --build=ddox
