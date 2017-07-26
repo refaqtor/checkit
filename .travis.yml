@@ -13,7 +13,7 @@ script:
   - dscanner --syntaxCheck source 2>&1 || echo "Syntax check!"
   - dscanner --sloc source
   - dub run checkit:tests
-  - rm tests*.lst
+  - rm test*.lst
   - ./doveralls
   - dub build --build=ddox
 deploy:
