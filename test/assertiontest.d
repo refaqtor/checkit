@@ -1,7 +1,7 @@
 import checkit.assertion;
 
 import core.exception;
-import std.stdio;
+import checkit.exception;
 import std.functional;
 
 interface DummyInterface
@@ -13,9 +13,7 @@ interface DummyInterface
 class TestDummy: DummyInterface
 {
   public:
-    override void test()
-    {
-    }
+    override void test(){}
 }
 
 /// shouldBeNull - should succeed when object is null
@@ -35,9 +33,9 @@ unittest
     value.shouldBeNull();
     assert(false);
   }
-  catch(AssertError e)
+  catch(UnitTestException e)
   { 
-    assert(e.msg == "expected to be <null>.");
+    assert(e.msg == "Expected <null>, got <test>");
   }
 }
 
@@ -58,9 +56,9 @@ unittest
     value.shouldNotBeNull();
     assert(false);
   }
-  catch(AssertError e)
+  catch(UnitTestException e)
   { 
-    assert(e.msg == "expected to not be <null>.");
+    assert(e.msg == "Expected not <null>, got <null>");
   }
 }
 
@@ -78,9 +76,9 @@ unittest
     "test".shouldEqual("some");
     assert(false);
   }
-  catch(AssertError e)
+  catch(UnitTestException e)
   {
-    assert(e.msg == "<test> expected to equal <some>.");
+    assert(e.msg == "Expected <some>, got <test>");
   }
 }
 
@@ -98,9 +96,9 @@ unittest
     "test".shouldNotEqual("test");
     assert(false);
   }
-  catch(AssertError e)
+  catch(UnitTestException e)
   {
-    assert(e.msg == "<test> expected to not equal <test>.");
+    assert(e.msg == "Expected not <test>, got <test>");
   }
 }
 
@@ -118,9 +116,9 @@ unittest
     false.shouldBeTrue();
     assert(false);
   }
-  catch(AssertError e)
+  catch(UnitTestException e)
   {
-    assert(e.msg == "<false> expected to be <true>.");
+    assert(e.msg == "Expected <true>, got <false>");
   }
 }
 
@@ -138,9 +136,9 @@ unittest
     true.shouldBeFalse();
     assert(false);
   }
-  catch(AssertError e)
+  catch(UnitTestException e)
   {
-    assert(e.msg == "<true> expected to be <false>.");
+    assert(e.msg == "Expected <false>, got <true>");
   }
 }
 
@@ -153,27 +151,7 @@ unittest
     assert(false);
   }
 
-  toDelegate(&testThrow).shouldThrow("SHOT!");
-}
-
-/// shouldThrow - should fail when exceptions names are not equal
-unittest
-{
-  void testthrow()
-  {
-    throw new Exception("shot!");
-    assert(false);
-  }
-
-  try
-  {
-    toDelegate(&testthrow).shouldThrow("test");
-    assert(false);
-  }
-  catch(Throwable e)
-  {
-    assert(e.msg == "Exception was thrown. But expected: test"); 
-  }
+  testThrow().shouldThrow!Exception();
 }
 
 /// shouldThrow - should fail when an exception is not thrown 
@@ -184,27 +162,31 @@ unittest
 
   try
   {
-    toDelegate(&testThrow).shouldThrow();
+    testThrow.shouldThrow!UnitTestException();
   }
-  catch(Throwable e)
+  catch(UnitTestException e)
   {
     exception = e;
   }
 
   assert(exception !is null);
-  assert(exception.msg == "Exception was not thrown. Expected one.");
+  assert(exception.msg == "Expression did not throw");
+
+  void testThrow2()
+  {
+    throw new Exception("SHOT!");
+    assert(false);
+  }
 
   try
   {
-    toDelegate(&testThrow).shouldThrow("TEST");
+    testThrow2().shouldThrow!UnitTestException();
+    assert(false);
   }
-  catch(Throwable e)
+  catch(UnitTestException e)
   {
-    exception = e;
+    assert(e.msg == "Expected <UnitTestException>, but throw <object.Exception>");
   }
-
-  assert(exception !is null);
-  assert(exception.msg == "Exception was not thrown. Expected: TEST");
 }
 
 /// shouldBeInstanceOf - should success when object instance expect

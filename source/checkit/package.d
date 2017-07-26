@@ -7,3 +7,4 @@
 module checkit;
 
 public import checkit.assertion;
+public import checkit.mock;

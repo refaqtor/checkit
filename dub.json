@@ -7,18 +7,18 @@
   "authors": [
     "LLC CERERIS"
   ],
-  "sourcePaths": ["./source"],
+  "sourcePaths": ["source"],
   "targetName": "checkit",
   "targetType": "library",
   "subPackages": [
     {
-      "name": "tests",
+      "name": "test",
       "targetName": "checkit-test",
       "description": "Tests for checkit",
       "targetType": "executable",
       "buildOptions": ["unittests", "coverage"],
-      "mainSourceFile": "tests/main.d",
-      "sourcePaths": ["./source/", "./tests/"]
+      "mainSourceFile": "test/main.d",
+      "sourcePaths": ["source", "test"]
     }
   ]
 }

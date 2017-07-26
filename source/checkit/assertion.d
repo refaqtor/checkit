@@ -7,97 +7,145 @@
 module checkit.assertion;
 
 import core.exception;
+import std.traits;
+import std.range;
+import checkit.exception;
 import std.algorithm.comparison: max, min;
 import std.string;
+
+private void fail(in string output, in string file, in size_t line) @safe pure
+{
+  throw new UnitTestException([output], file, line);
+}
 
 /** Used to assert that one value is equal to null.
 
   Params:
-    object = The value that should equal null.
+    value = The value that should equal null.
     message = The exception message.
     file = The file name that the assert failed in. Should be left as default.
     line = The file line that the assert failed in. Should be left as default.
   Throws:
-    If value is NOT null, will throw an AssertError.
+    If value is NOT null, will throw an UnitTestException.
 
   Examples:
     ---
-    // Will throw an exception like "AssertError@example.d(6): expected to be <null>."
+    // Will throw an exception like "checkit.exception.UnitTestException@example.d(6): Expected <null>, got <blah>."
     string test = "blah";
     test.shouldBeNull();
     ---
 */
-void shouldBeNull(T)(T object, string message = null, string file = __FILE__, size_t line = __LINE__)
+void shouldBeNull(T)(in auto ref T value, string message = null, string file = __FILE__, size_t line = __LINE__)
 {
-  if(object !is null)
+  if(value !is null)
   {
-    if(!message)
-    {
-      message = "expected to be <null>.";
-    }
-
-    throw new AssertError(message, file, line);
+    fail(message !is null ? message : "Expected <null>, got <%s>".format(value), file, line);
   }
 }
 
 /** Used to assert that one value is not equal to null.
 
   Params:
-    object = The value that should not equal null.
+    value = The value that should not equal null.
     message = The exception message.
     file = The file name that the assert failed in. Should be left as default.
     line = The file line that the assert failed in. Should be left as default.
   Throws:
-    If value is null, will throw an AssertError.
+    If value is null, will throw an UnitTestException.
 
   Examples:
     ---
-    // Will throw an exception like "AssertError@example.d(6): expected to not be <null>."
+    // Will throw an exception like "checkit.exception.UnitTestException@example.d(6): Expected not <null>, got <null>"
     string test = null;
     test.shouldNotBeNull();
     ---
 */
-void shouldNotBeNull(T)(T object, string message = null, string file = __FILE__, size_t line = __LINE__)
+void shouldNotBeNull(T)(in auto ref T value, string message = null, string file = __FILE__, size_t line = __LINE__)
 {
-	if(object is null)
+	if(value is null)
   {
-		if(!message)
-    {
-			message = "expected to not be <null>.";
-		}
-
-		throw new AssertError(message, file, line);
+    fail(message !is null ? message : "Expected not <null>, got <null>", file, line);
 	}
+}
+
+private enum isObject(T) = is(T == class) || is(T == interface);
+
+private bool isEqual(V, E)(in auto ref V value, in auto ref E expected)
+  if(!isObject!V &&
+    (!isInputRange!V || !isInputRange!E) &&
+    !isFloatingPoint!V && !isFloatingPoint!E &&
+    is(typeof(value == expected) == bool))
+{
+  return value == expected;
+}
+
+private bool isEqual(V, E)(in V value, in E expected)
+ if (!isObject!V && (isFloatingPoint!V || isFloatingPoint!E) && is(typeof(value == expected) == bool))
+{
+  return value == expected;
+}
+
+private bool isEqual(V, E)(V value, E expected)
+if (!isObject!V && isInputRange!V && isInputRange!E && is(typeof(value.front == expected.front) == bool))
+{
+  import std.algorithm: equal;
+  return equal(value, expected);
+}
+
+private bool isEqual(V, E)(V value, E expected)
+if (!isObject!V &&
+    isInputRange!V && isInputRange!E && !is(typeof(value.front == expected.front) == bool) &&
+    isInputRange!(ElementType!V) && isInputRange!(ElementType!E))
+{
+  import std.algorithm: equal;
+
+  while(!value.empty && !expected.empty)
+  {
+    if(!equal(value.front, expected.front))
+      return false;
+
+    value.popFront;
+    expected.popFront;
+  }
+    
+  return value.empty && expected.empty;
+}
+
+private bool isEqual(V, E)(V value, E expected)
+if (isObject!V && isObject!E)
+{
+  static assert(is(typeof(()
+  {
+    string s1 = value.toString;
+    string s2 = expected.toString;
+  })), "Cannot compare instances of " ~ V.stringof ~ " or " ~ E.stringof ~ " unless toString is overridden for both");
+
+  return value.tupleof == expected.tupleof;
 }
 
 /** Used to assert that one value is equal to another value.
 
   Params:
-    a = The value to test.
-    b = The value it should be equal to.
+    value = The value.
+    expected = The expected value.
     message = The exception message.
     file = The file name that the assert failed in. Should be left as default.
     line = The file line that the assert failed in. Should be left as default.
   Throws:
-    If values are not equal, will throw an AssertError with expected and actual values.
+    If values are not equal, will throw an UnitTestException with expected and actual values.
 
   Examples:
     ---
-    // Will throw an exception like "AssertError@example.d(6): <3> expected to equal <5>."
+    // Will throw an exception like "checkit.exception.UnitTestException@example.d(6): <3> expected to equal <5>."
     int z = 3;
     z.shouldEqual(5);
     ---
 */
-void shouldEqual(T, U)(T a, U b, string message = null, string file = __FILE__, size_t line = __LINE__)
+void shouldEqual(T, U)(auto ref T value, auto ref U expected, string message = null, string file = __FILE__, size_t line = __LINE__)
 {
-	if(a != b)
+  if(!isEqual(value, expected))
   {
-		if(!message)
-    {
-			message = "<%s> expected to equal <%s>.".format(a, b);
-		}
-
-		throw new AssertError(message, file, line);
+    fail(message !is null ? message : "Expected <%s>, got <%s>".format(expected, value), file, line);
 	}
 }
 
@@ -110,144 +158,183 @@ void shouldEqual(T, U)(T a, U b, string message = null, string file = __FILE__, 
     file = The file name that the assert failed in. Should be left as default.
     line = The file line that the assert failed in. Should be left as default.
   Throws:
-    If values are equal, will throw an AssertError with expected and actual values.
+    If values are equal, will throw an UnitTestException with expected and actual values.
 
   Examples:
     ---
-    // Will throw an exception like "AssertError@example.d(6): <3> expected to not equal <5>."
-    "abc".shouldEqual("abc");
+    // Will throw an exception like "checkit.exception.UnitTestException@example.d(6): Expected not <abc>, got <abc>"
+    "abc".shouldNotEqual("abc");
     ---
 */
-void shouldNotEqual(T, U)(T a, U b, string message = null, string file = __FILE__, size_t line = __LINE__)
+void shouldNotEqual(T, U)(T value, U expected, string message = null, string file = __FILE__, size_t line = __LINE__)
 {
-	if(a == b)
+	if(isEqual(value, expected))
   {
-		if(!message)
-    {
-			message = "<%s> expected to not equal <%s>.".format(a, b);
-		}
-
-		throw new AssertError(message, file, line);
+    fail(message !is null ? message : "Expected not <%s>, got <%s>".format(expected, value), file, line);
 	}
 }
 
 /** Used to assert that one value is equal to true.
 
   Params:
-    object = The value that should equal true.
+    condition = The value that should equal true.
     message = The exception message.
     file = The file name that the assert failed in. Should be left as default.
     line = The file line that the assert failed in. Should be left as default.
   Throws:
-    If values are not true, will throw an AssertError with expected and actual values.
+    If values are not true, will throw an UnitTestException with expected and actual values.
 
   Examples:
     ---
-    // Will throw an exception like "AssertError@example.d(6): <false> expected to bee <true>."
+    // Will throw an exception like "checkit.exception.UnitTestException@example.d(6): Expected <true>, got <false>"
     false.shouldBeTrue();
     ---
 */
-void shouldBeTrue(T)(T object, string message = null, string file = __FILE__, size_t line = __LINE__)
+void shouldBeTrue(T)(lazy T condition, string message = null, string file = __FILE__, size_t line = __LINE__)
 {
-	if(object !is true)
-  {
-		if(!message)
-    {
-			message = "<%s> expected to be <true>.".format(object);
-		}
-
-		throw new AssertError(message, file, line);
-	}
+  shouldEqual(cast(bool) condition, true, message, file, line);
 }
 
 /** Used to assert that one value is equal to false.
 
   Params:
-    object = The value that should equal false.
+    condition = The value that should equal false.
     message = The exception message.
     file = The file name that the assert failed in. Should be left as default.
     line = The file line that the assert failed in. Should be left as default.
   Throws:
-    If values are not false, will throw an AssertError with expected and actual values.
+    If values are not false, will throw an UnitTestException with expected and actual values.
 
   Examples:
     ---
-    // Will throw an exception like "AssertError@example.d(6): <true> expected to bee <false>."
+    // Will throw an exception like "checkit.exception.UnitTestException@example.d(6): Expected <false>, got <true>"
     true.shouldBeFalse();
     ---
 */
-void shouldBeFalse(T)(T object, string message = null, string file = __FILE__, size_t line = __LINE__)
+void shouldBeFalse(T)(lazy T condition, string message = null, string file = __FILE__, size_t line = __LINE__)
 {
-	if(object !is false)
-  {
-		if(!message)
-    {
-			message = "<%s> expected to be <false>.".format(object);
-		}
-
-		throw new AssertError(message, file, line);
-	}
+  shouldEqual(cast(bool) condition, false, message, file, line);
 }
 
-/** Used for asserting that a delegate will throw an exception.
+private auto threw(T: Throwable, E)(lazy E expr) @trusted
+{
+  struct ThrowResult
+  {
+    bool threw;
+    TypeInfo typeInfo;
+    immutable(T) throwable;
+
+    T opCast(T)() const pure if (is(T == bool))
+    {
+      return threw;
+    }
+  }
+
+  import std.stdio;
+  try
+  {
+    expr();
+  }
+  catch(T e)
+  {
+    return ThrowResult(true, typeid(e), cast(immutable)e);
+  }
+
+  return ThrowResult(false);
+}
+
+/** Used for asserting that a expression will throw an exception.
 
   Params:
-    func = The delegate that is expected to throw the exception.
-    message = The message that is expected to be in the exception. Will not be tested, if it is null.
+    condition = The expression that is expected to throw the exception.
     file = The file name that the assert failed in. Should be left as default.
     line = The file line that the assert failed in. Should be left as default.
   Throws:
-    If delegate does NOT throw, will throw an AssertError.
+    If expression does not throw, will throw an UnitTestException.
 
   Examples:
     ---
     // Makes sure it throws with the message "test"
-    shouldThrow(delegate()
-    {
-	    throw new Exception("boom!");
-    }, "test");
+    void noThrow(){};
+    void withThrow(){throw new Exception("test");};
+    
+    // Will throw an exception like "checkit.exception.UnitTestException@test/example.d(7): Expression did not throw"
+    noThrow.shouldThrow();
+    // Will throw an exception like "checkit.exception.UnitTestException@test/example.d(7): Expression did not throw"
+    noThrow.shouldThrow!Exception();
 
-    // Makes sure it throws, but does not check the message
-    shouldThrow(delegate(){
-	    throw new Exception("test");
-    });
-
-    // Will throw an exception like "AssertError@test/example.d(7): Exception was not thrown. Expected: test"
-    shouldThrow(delegate(){}, "test");
-
-    // Will throw an exception like "AssertError@test/example.d(7): Exception was not thrown. Expected one.
-    shouldThrow(delegate(){});
+    // Will throw an exception like "checkit.exception.UnitTestException@test/example.d(7): Expected <UnitTestException>, but throw <object.Exception>"
+    withThrow.shouldThrow!UnitTestException();
     ---
 */
-void shouldThrow(void delegate() func, string message = null, string file = __FILE__, size_t line = __LINE__)
+void shouldThrow(T: Throwable = Exception, E)(lazy E condition, string file = __FILE__, size_t line = __LINE__)
 {
-  bool hasThrown = false;
+  import std.conv: text;
+  import std.stdio;
 
-	try
-  {
-		func();
-	}
-  catch(Throwable exception)
-  {
-		if(message && message != exception.msg)
-    {
-			throw new AssertError("Exception was thrown. But expected: " ~ message, file, line);
-		}
+  bool isThrow = true;
 
-		hasThrown = true;
-	}
-
-	if(!hasThrown)
+  () @trusted
   {
-		if(message)
+    try
     {
-			throw new AssertError("Exception was not thrown. Expected: " ~ message, file, line);
-		}
-    else
+      if(!threw!T(condition))
+      {
+        isThrow = false;
+      }
+    }
+    catch(Throwable t)
     {
-			throw new AssertError("Exception was not thrown. Expected one.", file, line);
-		}
-	}
+        fail(text("Expected <", T.stringof, ">, but throw <", typeid(t), ">"), file, line);
+    }
+  }();
+
+  if(!isThrow)
+  {
+    fail("Expression did not throw", file, line);
+  }
+}
+
+/** Used for asserting that a expression will not throw an exception.
+
+  Params:
+    condition = The expression that is expected to not throw the exception.
+    message = The message of exception.
+    file = The file name that the assert failed in. Should be left as default.
+    line = The file line that the assert failed in. Should be left as default.
+  Throws:
+    If expression does throw, will throw an UnitTestException.
+
+  Examples:
+    ---
+    // Makes sure it throws with the message "test"
+    void noThrow(){};
+    void withThrow(){throw new Exception("test");};
+    
+    // Will throw an exception like "checkit.exception.UnitTestException@test/example.d(7): Expression did not throw"
+    noThrow.shouldThrow();
+    // Will throw an exception like "checkit.exception.UnitTestException@test/example.d(7): Expression did not throw"
+    noThrow.shouldThrow!Exception();
+
+    // Will throw an exception like "checkit.exception.UnitTestException@test/example.d(7): Expected <UnitTestException>, but throw <object.Exception>"
+    withThrow.shouldThrow!UnitTestException();
+    ---
+*/
+void shouldNotThrow(T: Throwable = Exception, E)(lazy E condition, string file = __FILE__, size_t line = __LINE__)
+{
+  if(threw!T(expr))
+  {
+    fail("Expression threw", file, line);
+  }
+}
+
+void shouldThrowWithMessage(T: Throwable = Exception, E)(lazy E expr, string message, string file = __FILE__, size_t line = __LINE__)
+{
+  auto threw = threw!T(expr);
+  if(!threw)
+    fail("Expression did not throw", file, line);
+
+  threw.throwable.msg.shouldEqual(message, file, line);
 }
 
 /** Used to assert that object is instance of class.
