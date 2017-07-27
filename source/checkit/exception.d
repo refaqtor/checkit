@@ -6,14 +6,31 @@
 
 module checkit.exception;
 
+/// Exception fot unit tests
 class UnitTestException: Exception
 {
   public:
+    /** Constructor with string
+
+      Params:
+        message = Exception message.
+        file = The file name that the assert failed in. Should be left as default.
+        line = The file line that the assert failed in. Should be left as default.
+        next = Next Throwable object.
+    */
     this(in string message, string file = __FILE__, size_t line = __LINE__, Throwable next = null) @safe pure nothrow
     {
       this([message], file, line, next);
     }
 
+    /** Constructor with list strings
+
+      Params:
+        messageLines = Exception message list.
+        file = The file name that the assert failed in. Should be left as default.
+        line = The file line that the assert failed in. Should be left as default.
+        next = Next Throwable object. Should be left as default.
+    */
     this(in string[] messageLines, string file = __FILE__, size_t line = __LINE__, Throwable next = null) @safe pure nothrow
     {
       import std.string: join;
@@ -21,19 +38,6 @@ class UnitTestException: Exception
       _messageLines = messageLines;
     }
 
-    override string toString() @safe const pure
-    {
-      import std.algorithm: map;
-      import std.string: join;
-      return () @trusted { return _messageLines.map!(a => getOutputPrefix(file, line) ~ a).join("\n"); }();
-    }
-
   private:
-    string getOutputPrefix(in string file, in size_t line) @safe const pure
-    {
-      import std.conv: to;
-      return "  " ~ file ~ ":" ~ line.to!string ~ " - ";
-    }
-
     const string[] _messageLines;
 }

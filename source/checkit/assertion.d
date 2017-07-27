@@ -6,12 +6,12 @@
 
 module checkit.assertion;
 
-import core.exception;
-import std.traits;
-import std.range;
 import checkit.exception;
+import core.exception;
 import std.algorithm.comparison: max, min;
+import std.range;
 import std.string;
+import std.traits;
 
 private void fail(in string output, in string file, in size_t line) @safe pure
 {
@@ -35,7 +35,10 @@ private void fail(in string output, in string file, in size_t line) @safe pure
     test.shouldBeNull();
     ---
 */
-void shouldBeNull(T)(in auto ref T value, string message = null, string file = __FILE__, size_t line = __LINE__)
+void shouldBeNull(T)( in auto ref T value, 
+                      in string message = null,
+                      in string file = __FILE__, 
+                      in size_t line = __LINE__)
 {
   if(value !is null)
   {
@@ -60,7 +63,10 @@ void shouldBeNull(T)(in auto ref T value, string message = null, string file = _
     test.shouldNotBeNull();
     ---
 */
-void shouldNotBeNull(T)(in auto ref T value, string message = null, string file = __FILE__, size_t line = __LINE__)
+void shouldNotBeNull(T)(in auto ref T value, 
+                        in string message = null, 
+                        in string file = __FILE__, 
+                        in size_t line = __LINE__)
 {
 	if(value is null)
   {
@@ -141,7 +147,11 @@ if (isObject!V && isObject!E)
     z.shouldEqual(5);
     ---
 */
-void shouldEqual(T, U)(auto ref T value, auto ref U expected, string message = null, string file = __FILE__, size_t line = __LINE__)
+void shouldEqual(T, U)( auto ref T value, 
+                        auto ref U expected, 
+                        in string message = null, 
+                        in string file = __FILE__, 
+                        in size_t line = __LINE__)
 {
   if(!isEqual(value, expected))
   {
@@ -152,8 +162,8 @@ void shouldEqual(T, U)(auto ref T value, auto ref U expected, string message = n
 /** Used to assert that one value is not equal to another value.
 
   Params:
-    a = The value to test.
-    b = The value it should not be equal to.
+    value = The value to test.
+    expected = The value it should not be equal to.
     message = The exception message.
     file = The file name that the assert failed in. Should be left as default.
     line = The file line that the assert failed in. Should be left as default.
@@ -166,7 +176,10 @@ void shouldEqual(T, U)(auto ref T value, auto ref U expected, string message = n
     "abc".shouldNotEqual("abc");
     ---
 */
-void shouldNotEqual(T, U)(T value, U expected, string message = null, string file = __FILE__, size_t line = __LINE__)
+void shouldNotEqual(T, U)(T value, U expected, 
+                          in string message = null, 
+                          in string file = __FILE__, 
+                          in size_t line = __LINE__)
 {
 	if(isEqual(value, expected))
   {
@@ -190,7 +203,7 @@ void shouldNotEqual(T, U)(T value, U expected, string message = null, string fil
     false.shouldBeTrue();
     ---
 */
-void shouldBeTrue(T)(lazy T condition, string message = null, string file = __FILE__, size_t line = __LINE__)
+void shouldBeTrue(T)(lazy T condition, in string message = null, in string file = __FILE__, in size_t line = __LINE__)
 {
   shouldEqual(cast(bool) condition, true, message, file, line);
 }
@@ -211,7 +224,7 @@ void shouldBeTrue(T)(lazy T condition, string message = null, string file = __FI
     true.shouldBeFalse();
     ---
 */
-void shouldBeFalse(T)(lazy T condition, string message = null, string file = __FILE__, size_t line = __LINE__)
+void shouldBeFalse(T)(lazy T condition, in string message = null, in string file = __FILE__, in size_t line = __LINE__)
 {
   shouldEqual(cast(bool) condition, false, message, file, line);
 }
@@ -230,7 +243,6 @@ private auto threw(T: Throwable, E)(lazy E expr) @trusted
     }
   }
 
-  import std.stdio;
   try
   {
     expr();
@@ -267,10 +279,9 @@ private auto threw(T: Throwable, E)(lazy E expr) @trusted
     withThrow.shouldThrow!UnitTestException();
     ---
 */
-void shouldThrow(T: Throwable = Exception, E)(lazy E condition, string file = __FILE__, size_t line = __LINE__)
+void shouldThrow(T: Throwable = Exception, E)(lazy E condition, in string file = __FILE__, in size_t line = __LINE__)
 {
   import std.conv: text;
-  import std.stdio;
 
   bool isThrow = true;
 
@@ -299,7 +310,6 @@ void shouldThrow(T: Throwable = Exception, E)(lazy E condition, string file = __
 
   Params:
     condition = The expression that is expected to not throw the exception.
-    message = The message of exception.
     file = The file name that the assert failed in. Should be left as default.
     line = The file line that the assert failed in. Should be left as default.
   Throws:
@@ -311,30 +321,51 @@ void shouldThrow(T: Throwable = Exception, E)(lazy E condition, string file = __
     void noThrow(){};
     void withThrow(){throw new Exception("test");};
     
-    // Will throw an exception like "checkit.exception.UnitTestException@test/example.d(7): Expression did not throw"
-    noThrow.shouldThrow();
-    // Will throw an exception like "checkit.exception.UnitTestException@test/example.d(7): Expression did not throw"
-    noThrow.shouldThrow!Exception();
-
-    // Will throw an exception like "checkit.exception.UnitTestException@test/example.d(7): Expected <UnitTestException>, but throw <object.Exception>"
-    withThrow.shouldThrow!UnitTestException();
+    // Will throw an exception like "checkit.exception.UnitTestException@test/example.d(7): Expression threw"
+    noThrow.shouldNotThrow();
     ---
 */
-void shouldNotThrow(T: Throwable = Exception, E)(lazy E condition, string file = __FILE__, size_t line = __LINE__)
+void shouldNotThrow(T: Throwable = Exception, E)(lazy E condition, in string file = __FILE__, in size_t line = __LINE__)
 {
-  if(threw!T(expr))
+  if(threw!T(condition))
   {
     fail("Expression threw", file, line);
   }
 }
 
-void shouldThrowWithMessage(T: Throwable = Exception, E)(lazy E expr, string message, string file = __FILE__, size_t line = __LINE__)
+/** Used for asserting that a expression will throw an exception with message.
+
+  Params:
+    condition = The expression that is expected to throw the exception.
+    message = Expected message exception.
+    file = The file name that the assert failed in. Should be left as default.
+    line = The file line that the assert failed in. Should be left as default.
+  Throws:
+    If expression does throw and message not expected, will throw an UnitTestException.
+
+  Examples:
+    ---
+    // Makes sure it throws with the message "test"
+    void withThrow(){throw new Exception("test");};
+    
+    // Will throw an exception like "checkit.exception.UnitTestException@test/example.d(7): Expression did not throw"
+    withThrow.shouldThrowWithMessage("bar");
+    ---
+*/
+void shouldThrowWithMessage(T: Throwable = Exception, E)( lazy E condition, 
+                                                          in string message, 
+                                                          in string file = __FILE__, 
+                                                          in size_t line = __LINE__)
 {
-  auto threw = threw!T(expr);
+  auto threw = threw!T(condition);
+
   if(!threw)
     fail("Expression did not throw", file, line);
 
-  threw.throwable.msg.shouldEqual(message, file, line);
+  if(message != threw.throwable.msg)
+  {
+    fail("Expected exception message <%s>, but got <%s>".format(message, threw.throwable.msg), file, line);
+  }
 }
 
 /** Used to assert that object is instance of class.
@@ -346,7 +377,7 @@ void shouldThrowWithMessage(T: Throwable = Exception, E)(lazy E expr, string mes
     file = The file name that the assert failed in. Should be left as default.
     line = The file line that the assert failed in. Should be left as default.
   Throws:
-    If object is not instance of class, will throw an AssertError.
+    If object is not instance of class, will throw an UnitTestException.
 
   Examples:
     ---
@@ -369,140 +400,131 @@ void shouldThrowWithMessage(T: Throwable = Exception, E)(lazy E expr, string mes
     b.shouldBeInstanceOf!Dummy();
     ---
 */
-void shouldBeInstanceOf(T, U)(U object, string message = null, string file = __FILE__, size_t line = __LINE__)
+void shouldBeInstanceOf(T, U)(U object, in string message = null, in string file = __FILE__, in size_t line = __LINE__)
 {
   if(cast(T)object is null)
   {
-    if(!message)
-    {
-			message = "<%s> expected to be instance of <%s>.".format(object, T.classinfo.name);
-		}
-
-		throw new AssertError(message, file, line);
+    fail(message ? message : "<%s> expected to be instance of <%s>".format(object, T.classinfo.name), file, line);
   }
 }
 
 /** Used to assert that one value is greater than another value.
 
   Params:
-    a = The value to test.
-    b = The value it should be greater than.
+    value = The value to test.
+    expected = The value it should be greater than.
     message = Exception message.
     file = The file name that the assert failed in. Should be left as default.
     line = The file line that the assert failed in. Should be left as default.
 
   Throws:
-    If the value is not greater, will throw an AssertError with expected and actual values.
+    If the value is not greater, will throw an UnitTestException with expected and actual values.
 
   Examples:
     ---
-    // Will throw an exception like "AssertError@example.d(6): <5> expected to be greater than <10>."
+    // Will throw an exception like "UnitTestException@example.d(6): <5> expected to be greater than <10>."
     5.shouldBeGreater(10);
     ---
 */
-void shouldBeGreater(T, U)(T a, U b, string message = null, string file = __FILE__, size_t line = __LINE__)
+void shouldBeGreater(T, U)( T value, 
+                            U expected, 
+                            in string message = null, 
+                            in string file = __FILE__, 
+                            in size_t line = __LINE__)
 {
-  if(a <= b)
+  if(value <= expected)
   {
-		if(!message)
-    {
-			message = "<%s> expected to be greater than <%s>.".format(a, b);
-		}
-
-		throw new AssertError(message, file, line);
+    fail(message ? message : "<%s> expected to be greater than <%s>".format(value, expected), file, line);
 	}
 }
 
 /** Used to assert that one value is greater or equal than another value.
 
   Params:
-    a = The value to test.
-    b = The value it should be greater or equal than.
+    value = The value to test.
+    expected = The value it should be greater or equal than.
     message = Exception message.
     file = The file name that the assert failed in. Should be left as default.
     line = The file line that the assert failed in. Should be left as default.
 
   Throws:
-    If the value is not greater or equal, will throw an AssertError with expected and actual values.
+    If the value is not greater or equal, will throw an UnitTestException with expected and actual values.
 
   Examples:
     ---
-    // Will throw an exception like "AssertError@example.d(6): <5> expected to be greater or equal to <10>."
+    // Will throw an exception like "UnitTestException@example.d(6): <5> expected to be greater or equal to <10>."
     5.shouldBeGreater(10);
     ---
 */
-void shouldBeGreaterOrEqual(T, U)(T a, U b, string message = null, string file = __FILE__, size_t line = __LINE__)
+void shouldBeGreaterOrEqual(T, U)(T value, 
+                                  U expected, 
+                                  in string message = null, 
+                                  in string file = __FILE__, 
+                                  in size_t line = __LINE__)
 {
-  if(a < b)
+  if(value < expected)
   {
-		if(!message)
-    {
-			message = "<%s> expected to be greater or equal to <%s>.".format(a, b);
-		}
-
-		throw new AssertError(message, file, line);
+    fail(message ? message : "<%s> expected to be greater or equal to <%s>".format(value, expected), file, line);
 	}
 }
 
 /** Used to assert that one value is less than another value.
 
   Params:
-    a = The value to test.
-    b = The value it should be less than.
+    value = The value to test.
+    expected = The value it should be less than.
     message = Exception message.
     file = The file name that the assert failed in. Should be left as default.
     line = The file line that the assert failed in. Should be left as default.
 
   Throws:
-    If the value is not less, will throw an AssertError with expected and actual values.
+    If the value is not less, will throw an UnitTestException with expected and actual values.
 
   Examples:
     ---
-    // Will throw an exception like "AssertError@example.d(6): <5> expected to be less than <10>."
+    // Will throw an exception like "UnitTestException@example.d(6): <5> expected to be less than <10>."
     10.shouldBeLess(5);
     ---
 */
-void shouldBeLess(T, U)(T a, U b, string message = null, string file = __FILE__, size_t line = __LINE__)
+void shouldBeLess(T, U)(T value, 
+                        U expected, 
+                        in string message = null, 
+                        in string file = __FILE__, 
+                        in size_t line = __LINE__)
 {
-  if(a >= b)
+  if(value >= expected)
   {
-		if(!message)
-    {
-			message = "<%s> expected to be less than <%s>.".format(a, b);
-		}
-
-		throw new AssertError(message, file, line);
+    fail(message ? message : "<%s> expected to be less than <%s>".format(value, expected), file, line);
 	}
 }
 
 /** Used to assert that one value is less or equal than another value.
 
   Params:
-    a = The value to test.
-    b = The value it should be less or equal than.
+    value = The value to test.
+    expected = The value it should be less or equal than.
     message = Exception message.
     file = The file name that the assert failed in. Should be left as default.
     line = The file line that the assert failed in. Should be left as default.
 
   Throws:
-    If the value is not less or equal, will throw an AssertError with expected and actual values.
+    If the value is not less or equal, will throw an UnitTestException with expected and actual values.
 
   Examples:
     ---
-    // Will throw an exception like "AssertError@example.d(6): <5> expected to be less or equal to <10>."
+    // Will throw an exception like "UnitTestException@example.d(6): <5> expected to be less or equal to <10>."
     10.shouldBeLessOrEqual(5);
     ---
 */
-void shouldBeLessOrEqual(T, U)(T a, U b, string message = null, string file = __FILE__, size_t line = __LINE__)
+void shouldBeLessOrEqual(T, U)( T value, 
+                                U expected, 
+                                in string message = null, 
+                                in string file = __FILE__, 
+                                in size_t line = __LINE__)
 {
-  if(a > b)
+  if(value > expected)
   {
-		if(!message)
-    {
-			message = "<%s> expected to be less or equal to <%s>.".format(a, b);
-		}
-
-		throw new AssertError(message, file, line);
+    fail(message ? message : "<%s> expected to be less or equal to <%s>".format(value, expected), file, line);
 	}
 }
 
@@ -510,31 +532,35 @@ void shouldBeLessOrEqual(T, U)(T a, U b, string message = null, string file = __
 
   Params:
     value = The expected value
-    a = The expected left value of range.
-    b = The expected right value of range.
+    left = The expected left value of range.
+    right = The expected right value of range.
     message = Exception message.
     file = The file name that the assert failed in. Should be left as default.
     line = The file line that the assert failed in. Should be left as default.
 
   Throws:
-    If the value is not between, will throw an AssertError with expected and actual values.
+    If the value is not between, will throw an UnitTestException with expected and actual values.
 
   Examples:
     ---
-    // Will throw an exception like "AssertError@example.d(6): <5> expected to be between <15> and <20>."
+    // Will throw an exception like "UnitTestException@example.d(6): <5> expected to be between <15> and <20>."
     10.shouldBeBetween(15, 20);
     ---
 */
-void shouldBeBetween(T, U, C)(T value, U a, C b, string message = null, string file = __FILE__, size_t line = __LINE__)
+void shouldBeBetween(T, U, C)(T value, 
+                              U left, 
+                              C right, 
+                              in string message = null, 
+                              in string file = __FILE__, 
+                              in size_t line = __LINE__)
 {
-  if(value >= max(a,b) || value <= min(a,b))
+  if(value >= max(left,right) || value <= min(left,right))
   {
-		if(!message)
-    {
-			message = "<%s> expected to be between <%s> and <%s>.".format(value, min(a, b), max(a, b));
-		}
-
-		throw new AssertError(message, file, line);
+    fail( message ? message : "<%s> expected to be between <%s> and <%s>".format( value, 
+                                                                                  min(left, right), 
+                                                                                  max(left, right)),
+          file, 
+          line);
 	}
 }
 
@@ -542,102 +568,250 @@ void shouldBeBetween(T, U, C)(T value, U a, C b, string message = null, string f
 
   Params:
     value = The expected value
-    a = The expected left value of range.
-    b = The expected right value of range.
+    left = The expected left value of range.
+    right = The expected right value of range.
     message = Exception message.
     file = The file name that the assert failed in. Should be left as default.
     line = The file line that the assert failed in. Should be left as default.
 
   Throws:
-    If the value is not between or equal, will throw an AssertError with expected and actual values.
+    If the value is not between or equal, will throw an UnitTestException with expected and actual values.
 
   Examples:
     ---
-    // Will throw an exception like "AssertError@example.d(6): <5> expected to be between <15> and <20>."
+    // Will throw an exception like "UnitTestException@example.d(6): <5> expected to be between <15> and <20>."
     10.shouldBeBetweenOrEqual(15, 20);
     ---
 */
-void shouldBeBetweenOrEqual(T, U, C)(T value, U a, C b, string message = null, string file = __FILE__, size_t line = __LINE__)
+void shouldBeBetweenOrEqual(T, U, C)( T value, 
+                                      U left, 
+                                      C right, 
+                                      string message = null, 
+                                      string file = __FILE__, 
+                                      size_t line = __LINE__)
 {
-  if(value > max(a,b) || value < min(a,b))
+  if(value > max(left,right) || value < min(left,right))
   {
-		if(!message)
-    {
-			message = "<%s> expected to be between or equal <%s> and <%s>.".format(value, min(a, b), max(a, b));
-		}
-
-		throw new AssertError(message, file, line);
+    fail( message ? message : "<%s> expected to be between or equal <%s> and <%s>".format( value, 
+                                                                                          min(left, right), 
+                                                                                          max(left, right)), 
+          file, 
+          line);
 	}
+}
+
+/** Used to assert that Range is empty.
+
+  Params:
+    rng = The expected Range.
+    message = Exception message.
+    file = The file name that the assert failed in. Should be left as default.
+    line = The file line that the assert failed in. Should be left as default.
+
+  Throws:
+    If the Range is not empty, will throw an UnitTestException with expected and actual values.
+
+  Examples:
+    ---
+    // Will throw an exception like "UnitTestException@example.d(6): Expected empty Range, but got <[1]>"
+    [1].shouldBeEmpty();
+    ---
+*/
+void shouldBeEmpty(R)(in auto ref R rng, in string message = null, in string file = __FILE__, in size_t line = __LINE__)
+if (isInputRange!R)
+{
+  if(!rng.empty)
+  {
+    fail(message ? message : "Expected empty Range, but got <%s>".format(rng), file, line);
+  }
+}
+
+/** Used to assert that Associative array is empty.
+
+  Params:
+    aa = The expected associative array.
+    message = Exception message.
+    file = The file name that the assert failed in. Should be left as default.
+    line = The file line that the assert failed in. Should be left as default.
+
+  Throws:
+    If the Associative array is not empty, will throw an UnitTestException with expected and actual values.
+
+  Examples:
+    ---
+    // Will throw an exception like "UnitTestException@example.d(6): Expected empty Associative Array, but got <["test":12]>"
+    ["test":12].shouldBeEmpty();
+    ---
+*/
+void shouldBeEmpty(T)(auto ref T aa, in string message = null, in string file = __FILE__, in size_t line = __LINE__)
+if(isAssociativeArray!T)
+{
+  () @trusted
+  { 
+    if(!aa.keys.empty)
+    {
+      fail(message ? message : "Expected empty Associative Array, but got <%s>".format(aa), file, line); 
+    }
+  }();
+}
+
+/** Used to assert that Range is not empty.
+
+  Params:
+    rng = The expected Range.
+    message = Exception message.
+    file = The file name that the assert failed in. Should be left as default.
+    line = The file line that the assert failed in. Should be left as default.
+
+  Throws:
+    If the Range is empty, will throw an UnitTestException with expected and actual values.
+
+  Examples:
+    ---
+    // Will throw an exception like "UnitTestException@example.d(6): Expected is not empty Range"
+    [1].shouldBeEmpty();
+    ---
+*/
+void shouldBeNotEmpty(R)( in auto ref R rng, 
+                          in string message = null, 
+                          in string file = __FILE__, 
+                          in size_t line = __LINE__)
+if (isInputRange!R)
+{
+  if(rng.empty)
+  {
+    fail(message ? message : "Expected is not empty Range", file, line);
+  }
+}
+
+/** Used to assert that Associative array is not empty.
+
+  Params:
+    aa = The expected associative array.
+    message = Exception message.
+    file = The file name that the assert failed in. Should be left as default.
+    line = The file line that the assert failed in. Should be left as default.
+
+  Throws:
+    If the Associative array is empty, will throw an UnitTestException with expected and actual values.
+
+  Examples:
+    ---
+    // Will throw an exception like "UnitTestException@example.d(6): Expected is not empty Associative Array"
+    ["test":12].shouldBeEmpty();
+    ---
+*/
+void shouldBeNotEmpty(T)(auto ref T aa, in string message = null, in string file = __FILE__, in size_t line = __LINE__)
+if(isAssociativeArray!T)
+{
+  () @trusted
+  { 
+    if(aa.keys.empty)
+    {
+      fail(message ? message : "Expected is not empty Associative Array", file, line); 
+    }
+  }();
 }
 
 /** Used to assert that one value is in an array of specified values.
 
   Params:
     value = The value to test.
-    validValues = An array of valid values.
+    expected = An array of valid values.
     message = Exception message.
     file = The file name that the assert failed in. Should be left as default.
     line = The file line that the assert failed in. Should be left as default.
 
   Throws:
-    If the value is not in the array, will throw an AssertError with the value and array values.
+    If the value is not in the array, will throw an UnitTestException with the value and array values.
 
   Examples:
     ---
-    // Will throw an exception like "AssertError@example.d(6): <Peter> is not in <[Andrew, Anatoly]>."
+    // Will throw an exception like "UnitTestException@example.d(6): <Peter> is not in <[Andrew, Anatoly]>."
     "Peter".shouldBeIn(["Andrew", "Anatoly"]);
     ---
 */
-void shouldBeIn(T, U)(T value, U[] validValues, string message = null, string file = __FILE__, size_t line = __LINE__)
+void shouldBeIn(T, U)(T value, 
+                      U expected, 
+                      in string message = null, 
+                      in string file = __FILE__, 
+                      in size_t line = __LINE__)
 {
-	foreach (valid; validValues)
+  import std.algorithm: canFind;
+
+  if(!expected.canFind(value))
   {
-		if(value == valid)
-    {
-      return;
-		}
+    fail(message ? message : "<%s> is not in <[%s]>".format(value, expected.join(", ")), file, line); 
 	}
-
-  if(!message)
-  {
-	  message = "<%s> is not in <[%s]>.".format(value, validValues.join(", "));
-  }
-
-	throw new AssertError(message, file, line);
 }
 
 /** Used to assert that array is contain of specified value.
 
   Params:
     array = An array of values.
-    validValue = The valid value.
+    expected = The valid value.
     message = Exception message.
     file = The file name that the assert failed in. Should be left as default.
     line = The file line that the assert failed in. Should be left as default.
 
   Throws:
-    If an array is not contain the value, will throw an AssertError with the value and array values.
+    If an array is not contain the value, will throw an UnitTestException with the value and array values.
 
   Examples:
     ---
-    // Will throw an exception like "AssertError@example.d(6): <[Peter, Anatoliy]> is not contain <Andrew>."
+    // Will throw an exception like "UnitTestException@example.d(6): <[Peter, Anatoliy]> is not contain <Andrew>."
     ["Peter", "Anatoly"].shouldBeContain("Andrew");
     ---
 */
-void shouldBeContain(T, U)(T[] array, U validValue, string message = null, string file = __FILE__, size_t line = __LINE__)
+void shouldBeContain(T, U)( T[] array, 
+                            U expected, 
+                            in string message = null, 
+                            in string file = __FILE__, 
+                            in size_t line = __LINE__)
 {
-	foreach (element; array)
-  {
-		if(validValue == element)
-    {
-      return;
-		}
-	}
+  import std.algorithm: canFind;
 
-  if(!message)
+  if(!array.canFind(expected))
   {
-	  message = "<[%s]> is not contain <%s>.".format(array.join(", "), validValue);
+    fail(message ? message : "<[%s]> is not contain <%s>".format(array.join(", "), expected), file, line); 
   }
+}
 
-	throw new AssertError(message, file, line);
+/** Used to assert that JSON object is equal.
+
+  Params:
+    actual = The actual JSON object.
+    expected = The excpected JSON.
+    message = Exception message.
+    file = The file name that the assert failed in. Should be left as default.
+    line = The file line that the assert failed in. Should be left as default.
+
+  Throws:
+    If an JSON objects is not equal, will throw an UnitTestException.
+
+  Examples:
+    ---
+    // Will throw an exception like "UnitTestException@example.d(6): Error parsing JSON: Unexpected end of data. (Line 1:10)"
+    `{"test" :1`.shouldBeEqualJSON(`{"test":1}`);
+ 
+    // Will throw an exception like "UnitTestException@example.d(6):`{"test" :1, "some" : "12"}`.shouldBeEqualJSON(`{"test":1}`);
+    `{"test" :1, "some" : "12"}`.shouldBeEqualJSON(`{"test":1}`);
+    ---
+*/
+void shouldBeEqualJSON( in string actual, 
+                        in string expected, 
+                        in string message = null, 
+                        in string file = __FILE__, 
+                        in size_t line = __LINE__)
+{
+  import std.json: JSONException, JSONValue, parseJSON;
+
+  try
+  {
+    actual.parseJSON.toPrettyString.shouldEqual(expected.parseJSON.toPrettyString, message, file, line);
+  }
+  catch(JSONException e)
+  {
+    fail("Error parsing JSON: " ~ e.msg, file, line);
+  }
 }

@@ -6,20 +6,61 @@
 
 module checkit.mock;
 
+import checkit.exception;
 import core.exception;
 import std.string;
 
+/// Class for create Mock object
 class Mock(T)
 {
   public:
+    /// Default constructor
     this()
     {
       _implementation = new MockAbstract;
     }
 
+    /** Add a value to be returned by the mock.
+
+      Params:
+        functionName = The name of function mock.
+        i = The count of realization for override function.
+        values = Are return values.
+
+      Throws:
+        If function not virtual, will throw an AssertError.
+
+      Examples:
+        ---
+        interface Dummy
+        {
+          int test();
+        }
+        auto mock = new Mock!Dummy;
+        mock.returnValue!"test"(1,2);
+        assert(mock.test() == 1);
+        assert(mock.test() == 2);
+        ---
+    */
+    void returnValue(string functionName, ubyte i = 0, V...)(V values)
+    {
+      import std.conv: text;
+
+      alias member = Identity!(__traits(getMember, T, functionName));
+      static assert(__traits(isVirtualMethod, member), "Can't use return value for <" ~ functionName ~ ">");
+
+      enum varName = functionName ~ text(`_`, i, `_returnValues`);
+      foreach(v; values)
+      {
+        mixin(varName ~ ` ~=  v;`);
+      }
+    }
+
+    /// Mock implementation
     MockAbstract _implementation;
 
   private:
+    /// Abstract Mock template
     class MockAbstract: T
     {
       import std.conv: to;
@@ -32,20 +73,124 @@ class Mock(T)
     alias _implementation this;
 }
 
+/// Mixin for test behavior
 mixin template MockCommon()
 {
   public:
-    void expectCalled(string functionName, string message = null, string file = __FILE__, size_t line = __LINE__, V...)(auto ref V values)
+    /** Used to assert function call once
+
+      Params:
+        functionName = The name of expected function.
+        message = Exception message.
+        file = The file name that the assert failed in. Should be left as default.
+        line = The file line that the assert failed in. Should be left as default.
+        values = Are expected parameter values.
+
+      Throws:
+        If function is not call with parameters, will throw an UnitTestException.
+
+      Examples:
+        ---
+        interface Dummy
+        {
+          void test();
+          void test(int a);
+        }
+
+        auto mock = new Mock!Dummy;
+        mock.test();
+        mock.test(12);
+        mock.expectCalled!"test"();
+        mock.expectCalled!"test"(12);
+
+        // Will throw an exception like "UnitTestException@example.d(6): <test> expected call with <50> but called with <Tuple!int(12)>
+        mock.exceptCalled!"test"(50);
+        ---
+    */
+    void expectCalled(string functionName, 
+                      string message = null, 
+                      string file = __FILE__, 
+                      size_t line = __LINE__, 
+                      V...)(auto ref V values)
     {
       expectCalled!(functionName, 1, message, file, line)(values);
     }
 
-    void expectNotCalled(string functionName, string message = null, string file = __FILE__, size_t line = __LINE__, V...)(auto ref V values)
+    /** Used to assert function not call
+
+      Params:
+        functionName = The name of expected function.
+        message = Exception message.
+        file = The file name that the assert failed in. Should be left as default.
+        line = The file line that the assert failed in. Should be left as default.
+        values = Are expected parameter values.
+
+      Throws:
+        If function is call with parameters, will throw an UnitTestException.
+
+      Examples:
+        ---
+        interface Dummy
+        {
+          void test();
+          void test(int a);
+        }
+
+        auto mock = new Mock!Dummy;
+        mock.test(12);
+        mock.expectNotCalled!"test"();
+        mock.expectNotCalled!"test"(24);
+
+        // Will throw an exception like "UnitTestException@example.d(6): <test> expected call with <12> <0> count but called <1> counts        
+        mock.exceptNotCalled!"test"(12);
+        ---
+    */
+    void expectNotCalled( string functionName, 
+                          string message = null, 
+                          string file = __FILE__, 
+                          size_t line = __LINE__, 
+                          V...)(auto ref V values)
     {
       expectCalled!(functionName, 0, message, file, line)(values);
     }
 
-    void expectCalled(string functionName, ulong count, string message = null, string file = __FILE__, size_t line = __LINE__, V...)(auto ref V values)
+    /** Used to assert function call many counts
+
+      Params:
+        functionName = The name of expected function.
+        count = Count of calls.
+        message = Exception message.
+        file = The file name that the assert failed in. Should be left as default.
+        line = The file line that the assert failed in. Should be left as default.
+        values = Are expected parameter values.
+
+      Throws:
+        If function is not call many count with parameters, will throw an UnitTestException.
+
+      Examples:
+        ---
+        interface Dummy
+        {
+          void test();
+          void test(int a);
+        }
+
+        auto mock = new Mock!Dummy;
+        mock.test();
+        mock.test(12);
+        mock.expectCalled!("test", 1)();
+        mock.expectCalled!("test", 1)(12);
+
+        // Will throw an exception like "UnitTestException@example.d(6): <test> expected call with <12> <2> count but called <1> counts
+        mock.exceptCalled!("test", 2)(12);
+        ---
+    */
+    void expectCalled(string functionName, 
+                      ulong count, 
+                      string message = null, 
+                      string file = __FILE__, 
+                      size_t line = __LINE__, 
+                      V...)(auto ref V values)
     {
       string[] callVariants;
       ulong callCount;
@@ -77,16 +222,27 @@ mixin template MockCommon()
 
           if(callCount > 0)
           {
-		        throw new AssertError("<%s> expected call with <%s> <%d> count but called <%d> counts.".format(functionName, arguments.join(","), count, callCount), file, line);
+		        throw new UnitTestException(
+                "<%s> expected call with <%s> <%d> count but called <%d> counts".format(functionName, 
+                                                                                        arguments.join(","), 
+                                                                                        count, 
+                                                                                        callCount), 
+                file, 
+                line);
           }
           else
           {
-		        throw new AssertError("<%s> expected call with <%s> but called with <%s>.".format(functionName, arguments.join(","), callVariants.join(",")), file, line);
+		        throw new UnitTestException(
+                "<%s> expected call with <%s> but called with <%s>".format( functionName, 
+                                                                            arguments.join(","), 
+                                                                            callVariants.join(",")), 
+                file, 
+                line);
           }
 		    }
         else
         {
-		      throw new AssertError(message, file, line);
+		      throw new UnitTestException(message, file, line);
         }
       }
     }
@@ -99,21 +255,16 @@ mixin template MockCommon()
 alias Identity(alias T) = T;
 private enum isPrivate(T, string member) = !__traits(compiles, __traits(getMember, T, member));
 
-string generateDefaultImplementationMixin(T)()
+private string generateDefaultImplementationMixin(T)()
 {
   import std.array: join;
-  import std.format: format;
-  import std.stdio;
   import std.conv: text;
-  import std.range: iota;
-  import std.traits: functionAttributes, FunctionAttribute, Parameters, arity;
-  import std.range;
-  import std.algorithm;
-  import std.conv;
+  import std.format: format;
+  import std.traits: arity, FunctionAttribute, functionAttributes, Parameters;
 
   string[] code;
 
-  // if(!__ctfe) return null;
+  if(!__ctfe) return null;
 
   // foreach all member in the class
   foreach(memberName; __traits(allMembers, T))
@@ -127,7 +278,7 @@ string generateDefaultImplementationMixin(T)()
       {
         foreach(i, overload; __traits(getOverloads, T, memberName))
         {
-          static if(!(functionAttributes!member & FunctionAttribute.const_) && !(functionAttributes!member & FunctionAttribute.const_))
+          static if(!(functionAttributes!member & FunctionAttribute.const_))
           {
             enum overloadName = text(memberName, "_", i);
             enum overloadString = `Identity!(__traits(getOverloads, T, "%s")[%s])`.format(memberName, i);
@@ -145,8 +296,7 @@ string generateDefaultImplementationMixin(T)()
 
             string[] returnDefault;
 
-            import std.string;
-            if(typeof(overload).stringof.indexOf("void(") != 0)
+            static if(typeof(overload).stringof.indexOf("void(") != 0)
             {
               enum varName = overloadName ~ `_returnValues`;
               code ~= `private %s_returnType[] %s;`.format(overloadName, varName);
@@ -205,8 +355,8 @@ string generateDefaultImplementationMixin(T)()
 
 private string functionAttributesString(alias F)()
 {
-  import std.traits: functionAttributes, FunctionAttribute;
   import std.array: join;
+  import std.traits: FunctionAttribute, functionAttributes;
 
   string[] parts;
   const attrs = functionAttributes!F;

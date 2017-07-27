@@ -1,6 +1,7 @@
 import checkit.mock;
 
 import core.exception;
+import checkit.exception;
 import std.stdio;
 
 /// Mock.expectCalled - should make stubs for methods
@@ -37,6 +38,27 @@ unittest
   mock.expectCalled!"test"(12);
 }
 
+/// Mock.expectCalled - should fail with message
+unittest
+{
+  interface Dummy
+  {
+    void test(int a);
+  }
+
+  auto mock = new Mock!Dummy;
+  mock.test(12);
+
+  try
+  {
+    mock.expectCalled!("test", 1, "TEST")(10);
+  }
+  catch(UnitTestException e)
+  {
+    assert(e.msg == "TEST");
+  }
+}
+
 /// Mock.expectCalled - should fail when function not called
 unittest
 {
@@ -54,9 +76,9 @@ unittest
     mock.expectCalled!"test"(50);
     assert(false);
   }
-  catch(AssertError e)
+  catch(UnitTestException e)
   {
-    assert(e.msg == "<test> expected call with <50> but called with <Tuple!int(10),Tuple!int(20),Tuple!int(30)>.");
+    assert(e.msg == "<test> expected call with <50> but called with <Tuple!int(10),Tuple!int(20),Tuple!int(30)>");
   }
 }
 
@@ -94,9 +116,9 @@ unittest
     mock.expectCalled!("test", 10)(10);
     assert(false);
   }
-  catch(AssertError e)
+  catch(UnitTestException e)
   {
-    assert(e.msg == "<test> expected call with <10> <10> count but called <1> counts.");
+    assert(e.msg == "<test> expected call with <10> <10> count but called <1> counts");
   }
 }
 
@@ -128,8 +150,44 @@ unittest
   {
     mock.expectNotCalled!"test"(10);
   }
-  catch(AssertError e)
+  catch(UnitTestException e)
   {
-    assert(e.msg == "<test> expected call with <10> <0> count but called <1> counts.");
+    assert(e.msg == "<test> expected call with <10> <0> count but called <1> counts");
   }
+}
+
+/// Mock.returnValue - should return value
+unittest
+{
+  interface Dummy
+  {
+    int test();
+  }
+
+  auto mock = new Mock!Dummy;
+  mock.returnValue!"test"(1,2,3,4,5);
+  assert(mock.test() == 1);
+  assert(mock.test() == 2);
+  assert(mock.test() == 3);
+  assert(mock.test() == 4);
+  assert(mock.test() == 5);
+  assert(mock.test() == int.init);
+}
+
+/// Mock.returnValue - should return value when override
+unittest
+{
+  interface Dummy
+  {
+    int test();
+    int test(int a);
+  }
+
+  auto mock = new Mock!Dummy;
+  mock.returnValue!("test", 0)(1,10);
+  mock.returnValue!("test", 1)(20,30);
+  assert(mock.test() == 1);
+  assert(mock.test() == 10);
+  assert(mock.test(1) == 20);
+  assert(mock.test(2) == 30);
 }

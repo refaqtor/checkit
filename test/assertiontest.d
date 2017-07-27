@@ -189,6 +189,75 @@ unittest
   }
 }
 
+/// shouldNotThrow - should success when an exception is no throw 
+unittest
+{
+  void testThrow(){}
+  testThrow.shouldNotThrow();
+}
+
+/// shouldNotThrow - should fail when an exception is throw
+unittest
+{
+  void testThrow(){ throw new Exception("TEST");}
+
+  try
+  {
+    testThrow.shouldNotThrow();
+    assert(false);
+  }
+  catch(UnitTestException e)
+  {
+    assert(e.msg == "Expression threw");
+  }
+}
+
+/// shouldThrowWithMessage - should success when an exception is throw with message 
+unittest
+{
+  void testThrow()
+  {
+    throw new Exception("test");
+  }
+
+  testThrow().shouldThrowWithMessage("test");
+}
+
+/// shouldThrowWithMessage - should fail when an exception not throw 
+unittest
+{
+  void testThrow(){}
+
+  try
+  {
+    testThrow().shouldThrowWithMessage("test");
+    assert(false);
+  }
+  catch(UnitTestException e)
+  {
+    assert(e.msg == "Expression did not throw");
+  }
+}
+
+/// shouldThrowWithMessage - should fail when an exception is throw with another message 
+unittest
+{
+  void testThrow()
+  {
+    throw new Exception("test");
+  }
+
+  try
+  {
+    testThrow().shouldThrowWithMessage("abs");
+    assert(false);
+  }
+  catch(UnitTestException e)
+  {
+    assert(e.msg == "Expected exception message <abs>, but got <test>");
+  }
+}
+
 /// shouldBeInstanceOf - should success when object instance expect
 unittest
 {
@@ -207,9 +276,9 @@ unittest
     object.shouldBeInstanceOf!Exception();
     assert(false);
   }
-  catch(AssertError e)
+  catch(UnitTestException e)
   {
-    assert(e.msg == "<assertiontest.TestDummy> expected to be instance of <object.Exception>.");
+    assert(e.msg == "<assertiontest.TestDummy> expected to be instance of <object.Exception>");
   }
 }
 
@@ -223,7 +292,7 @@ unittest
     object.shouldBeInstanceOf!Exception("test!");
     assert(false);
   }
-  catch(AssertError e)
+  catch(UnitTestException e)
   {
     assert(e.msg == "test!");
   }
@@ -244,9 +313,9 @@ unittest
     5.shouldBeGreater(10);
     assert(false);
   }
-  catch(AssertError e)
+  catch(UnitTestException e)
   {
-    assert(e.msg == "<5> expected to be greater than <10>.");
+    assert(e.msg == "<5> expected to be greater than <10>");
   }
 }
 
@@ -271,9 +340,9 @@ unittest
     5.shouldBeGreaterOrEqual(10);
     assert(false);
   }
-  catch(AssertError e)
+  catch(UnitTestException e)
   {
-    assert(e.msg == "<5> expected to be greater or equal to <10>.");
+    assert(e.msg == "<5> expected to be greater or equal to <10>");
   }
 }
 
@@ -292,9 +361,9 @@ unittest
     10.shouldBeLess(5);
     assert(false);
   }
-  catch(AssertError e)
+  catch(UnitTestException e)
   {
-    assert(e.msg == "<10> expected to be less than <5>.");
+    assert(e.msg == "<10> expected to be less than <5>");
   }
 }
 
@@ -319,9 +388,9 @@ unittest
     10.shouldBeLessOrEqual(5);
     assert(false);
   }
-  catch(AssertError e)
+  catch(UnitTestException e)
   {
-    assert(e.msg == "<10> expected to be less or equal to <5>.");
+    assert(e.msg == "<10> expected to be less or equal to <5>");
   }
 }
 
@@ -340,9 +409,9 @@ unittest
     5.shouldBeBetween(20, 30);
     assert(false);
   }
-  catch(AssertError e)
+  catch(UnitTestException e)
   {
-    assert(e.msg == "<5> expected to be between <20> and <30>.");
+    assert(e.msg == "<5> expected to be between <20> and <30>");
   }
 }
 
@@ -367,9 +436,103 @@ unittest
     5.shouldBeBetweenOrEqual(20, 30);
     assert(false);
   }
-  catch(AssertError e)
+  catch(UnitTestException e)
   {
-    assert(e.msg == "<5> expected to be between or equal <20> and <30>.");
+    assert(e.msg == "<5> expected to be between or equal <20> and <30>");
+  }
+}
+
+/// shouldBeEmpty - should success when Range is empty
+unittest
+{
+  int[] range;
+  range.shouldBeEmpty();
+}
+
+/// shouldBeEmpty - should fail when Range is not empty
+unittest
+{
+  int[] range = [1];
+
+  try
+  {
+    range.shouldBeEmpty();
+    assert(false);
+  }
+  catch(UnitTestException e)
+  {
+    assert(e.msg == "Expected empty Range, but got <[1]>");
+  }
+}
+
+/// shouldBeEmpty - should success when Associative array is empty
+unittest
+{
+  int[string] range;
+  range.shouldBeEmpty();
+}
+
+/// shouldBeEmpty - should fail when Associative array is not empty
+unittest
+{
+  int[string] range;
+  range["test"] = 12;
+
+  try
+  {
+    range.shouldBeEmpty();
+    assert(false);
+  }
+  catch(UnitTestException e)
+  {
+    assert(e.msg == `Expected empty Associative Array, but got <["test":12]>`);
+  }
+}
+
+/// shouldBeNotEmpty - should success when Range is not empty
+unittest
+{
+  int[] range = [1];
+  range.shouldBeNotEmpty();
+}
+
+/// shouldBeNotEmpty - should fail when Range is empty
+unittest
+{
+  int[] range;
+
+  try
+  {
+    range.shouldBeNotEmpty();
+    assert(false);
+  }
+  catch(UnitTestException e)
+  {
+    assert(e.msg == "Expected is not empty Range");
+  }
+}
+
+/// shouldBeNotEmpty - should success when Associative array is not empty
+unittest
+{
+  int[string] range;
+  range["test"] = 12;
+  range.shouldBeNotEmpty();
+}
+
+/// shouldBeNotEmpty - should fail when Associative array is empty
+unittest
+{
+  int[string] range;
+
+  try
+  {
+    range.shouldBeNotEmpty();
+    assert(false);
+  }
+  catch(UnitTestException e)
+  {
+    assert(e.msg == `Expected is not empty Associative Array`);
   }
 }
 
@@ -387,9 +550,9 @@ unittest
     "test".shouldBeIn(["abc", "xyz"]);
     assert(false);
   }
-  catch(AssertError e)
+  catch(UnitTestException e)
   {
-    assert(e.msg == "<test> is not in <[abc, xyz]>.");
+    assert(e.msg == "<test> is not in <[abc, xyz]>");
   }
 }
 
@@ -407,8 +570,42 @@ unittest
     ["1", "2"].shouldBeContain("3");
     assert(false);
   }
-  catch(AssertError e)
+  catch(UnitTestException e)
   {
-    assert(e.msg == "<[1, 2]> is not contain <3>.");
+    assert(e.msg == "<[1, 2]> is not contain <3>");
+  }
+}
+
+/// shouldBeEqualJSON - should succeed when the JSON object equal
+unittest
+{
+  `{"test" :1, "some" : "12"}`.shouldBeEqualJSON(`{"some":"12","test":1}`);
+}
+
+/// shouldBeEqualJSON - should fail when the JSON object not equal
+unittest
+{
+  try
+  {
+    `{"test" :1, "some" : "12"}`.shouldBeEqualJSON(`{"test":1}`);
+    assert(false);
+  }
+  catch(UnitTestException e)
+  {
+    assert(e.msg == "Expected <{\n    \"test\": 1\n}>, got <{\n    \"some\": \"12\",\n    \"test\": 1\n}>");
+  }
+}
+
+/// shouldBeEqualJSON - should fail when the JSON string is not correct
+unittest
+{
+  try
+  {
+    `{"test" :1`.shouldBeEqualJSON(`{"test":1}`);
+    assert(false);
+  }
+  catch(UnitTestException e)
+  {
+    assert(e.msg == "Error parsing JSON: Unexpected end of data. (Line 1:10)");
   }
 }
