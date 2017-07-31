@@ -7,6 +7,7 @@
 module checkit;
 
 public import checkit.assertion;
+public import checkit.exception;
 public import checkit.bdd;
 public import checkit.mock;
 public import checkit.block;

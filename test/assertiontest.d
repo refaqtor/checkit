@@ -68,6 +68,21 @@ unittest
   "test".shouldEqual("test");
 }
 
+/// shouldEqual - should succeed when objects is equal
+unittest
+{
+  class Test
+  {
+    public:
+      int a;
+  }
+
+  auto test = new Test();
+  auto expected = new Test();
+
+  test.shouldEqual(expected);
+}
+
 /// shouldEqual - should when when objects is not equal
 unittest
 {

@@ -12,6 +12,7 @@ import std.algorithm.comparison: max, min;
 import std.range;
 import std.string;
 import std.traits;
+import std.conv;
 
 private void fail(in string output, in string file, in size_t line) @safe pure
 {
@@ -42,7 +43,7 @@ void shouldBeNull(T)( in auto ref T value,
 {
   if(value !is null)
   {
-    fail(message !is null ? message : "Expected <null>, got <%s>".format(value), file, line);
+    fail(message !is null ? message : "Expected <null>, got <%s>".format(to!string(value)), file, line);
   }
 }
 
