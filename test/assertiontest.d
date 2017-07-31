@@ -35,8 +35,16 @@ unittest
   }
   catch(UnitTestException e)
   { 
-    assert(e.msg == "Expected <null>, got <test>");
+    assert(e.msg == "Expected <null>");
   }
+}
+
+/// shouldBeNull - should fail when object is not null
+unittest
+{
+  class Test{}
+  Test value = null;
+  value.shouldBeNull();
 }
 
 /// shouldNotBeNull - should succeed when object is not null

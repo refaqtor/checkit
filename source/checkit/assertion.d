@@ -43,7 +43,7 @@ void shouldBeNull(T)( in auto ref T value,
 {
   if(value !is null)
   {
-    fail(message !is null ? message : "Expected <null>, got <%s>".format(to!string(value)), file, line);
+    fail(message !is null ? message : "Expected <null>", file, line);
   }
 }
 
