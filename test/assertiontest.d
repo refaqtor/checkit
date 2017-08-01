@@ -3,6 +3,8 @@ import checkit.assertion;
 import core.exception;
 import checkit.exception;
 import std.functional;
+import core.time;
+import core.thread;
 
 interface DummyInterface
 {
@@ -631,4 +633,14 @@ unittest
   {
     assert(e.msg == "Error parsing JSON: Unexpected end of data. (Line 1:10)");
   }
+}
+
+/// shouldRunLess - should success when function run less time
+unittest
+{
+  void expectedFunction()
+  {
+  }
+
+  expectedFunction.shouldRunLess(1.seconds);
 }

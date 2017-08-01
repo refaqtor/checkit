@@ -12,6 +12,7 @@ import checkit.blockmanager;
 
 import std.stdio;
 import std.conv;
+import std.getopt;
 
 interface RunnerInterface
 {
@@ -119,9 +120,17 @@ class BDDTestRunner(T): RunnerInterface
     TestBlock[] _failBlocks;
 }
 
-int runTests()
+int runTests(string[] args)
 {
+  bool verbose = false;
+
+  auto argumentInformation = getopt(
+    args,
+    "verbose|v", &verbose
+  );
+
   auto reporter = new ConsoleReporter;
+  reporter.setVerbose(verbose);
   auto runner = new BDDTestRunner!BlockManager(reporter);
   return runner.run();
 }

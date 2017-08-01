@@ -55,13 +55,13 @@ unittest
       ({
         then!"I should be served a coffee"
         ({
-          // throw new Exception("sdfsdf");
         });
       });
     });
   });
 
   auto reporter = new ConsoleReporter;
+  reporter.setVerbose(true);
   auto runner = new BDDTestRunner!BlockManager(reporter);
   runner.run();
 }

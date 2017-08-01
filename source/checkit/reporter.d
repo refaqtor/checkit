@@ -18,6 +18,8 @@ interface ReporterInterface
     void fail(TestBlock block);
     void fail(string message);
     void printResults(TestBlock[] successBlocks, TestBlock[] failBlocks);
+
+    void setVerbose(bool verbose);
 }
 
 class ConsoleReporter: ReporterInterface
@@ -25,27 +27,34 @@ class ConsoleReporter: ReporterInterface
   public:
     void success(TestBlock block)
     {
-      if(auto scenario = cast(ScenarioBlock) block)
-      { 
-        writeln();
-        writeln(
-          getColor(ConsoleColor.LIGHT_BLUE) ~
-          to!string(scenario.getTags()) ~
-          getColor(ConsoleColor.INITIAL)
-        );
-        printKeyValue("SCENARIO: ", block.getName(), ConsoleColor.LIGHT_YELLOW, ConsoleColor.LIGHT_GREEN);
+      if(_verbose)
+      {
+        if(auto scenario = cast(ScenarioBlock) block)
+        {
+          writeln();
+          writeln(
+            getColor(ConsoleColor.LIGHT_BLUE) ~
+            to!string(scenario.getTags()) ~
+            getColor(ConsoleColor.INITIAL)
+          );
+          printKeyValue("SCENARIO: ", block.getName(), ConsoleColor.LIGHT_YELLOW, ConsoleColor.LIGHT_GREEN);
+        }
+        else if(auto given = cast(GivenBlock) block)
+        { 
+          printKeyValue("   GIVEN: ", block.getName(), ConsoleColor.LIGHT_YELLOW, ConsoleColor.LIGHT_GREEN);
+        }
+        else if(auto when = cast(WhenBlock) block)
+        {  
+          printKeyValue("    WHEN: ", block.getName(), ConsoleColor.LIGHT_YELLOW, ConsoleColor.LIGHT_GREEN);
+        }
+        else if(auto then = cast(ThenBlock) block)
+        { 
+          printKeyValue("    THEN: ", block.getName(), ConsoleColor.LIGHT_YELLOW, ConsoleColor.LIGHT_GREEN);
+        }
       }
-      else if(auto given = cast(GivenBlock) block)
-      { 
-        printKeyValue("   GIVEN: ", block.getName(), ConsoleColor.LIGHT_YELLOW, ConsoleColor.LIGHT_GREEN);
-      }
-      else if(auto when = cast(WhenBlock) block)
-      { 
-        printKeyValue("    WHEN: ", block.getName(), ConsoleColor.LIGHT_YELLOW, ConsoleColor.LIGHT_GREEN);
-      }
-      else if(auto then = cast(ThenBlock) block)
-      { 
-        printKeyValue("    THEN: ", block.getName(), ConsoleColor.LIGHT_YELLOW, ConsoleColor.LIGHT_GREEN);
+      else
+      {
+        printChar('.', ConsoleColor.LIGHT_GREEN);
       }
     }
 
@@ -91,7 +100,17 @@ class ConsoleReporter: ReporterInterface
             getColor(ConsoleColor.INITIAL)));
     }
 
+    void setVerbose(bool verbose)
+    {
+      _verbose = verbose;
+    }
+
   private:
+    void printChar(char symbol, ConsoleColor color)
+    {
+      write(getColor(color) ~ symbol ~ getColor(ConsoleColor.INITIAL));
+    }
+
     void printKeyValue(string key, string value, ConsoleColor keyColor, ConsoleColor valueColor)
     {
       writeln(
@@ -125,4 +144,6 @@ class ConsoleReporter: ReporterInterface
           );
       }
     }
+
+    bool _verbose;
 }

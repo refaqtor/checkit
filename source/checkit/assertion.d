@@ -13,6 +13,8 @@ import std.range;
 import std.string;
 import std.traits;
 import std.conv;
+import core.time;
+import std.datetime;
 
 private void fail(in string output, in string file, in size_t line) @safe pure
 {
@@ -814,5 +816,17 @@ void shouldBeEqualJSON( in string actual,
   catch(JSONException e)
   {
     fail("Error parsing JSON: " ~ e.msg, file, line);
+  }
+}
+
+void shouldRunLess(E)(lazy E condition, in Duration time, in string message = null, in string file = __FILE__, in size_t line = __LINE__)
+{
+  auto startTime = Clock.currTime();
+  condition();
+  
+  auto delta = Clock.currTime() - startTime;
+  if(delta > time)
+  {
+    fail(message ? message : "Expected run time <%s>, but run <%s>".format(to!string(time), delta), file, line);
   }
 }
