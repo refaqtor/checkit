@@ -1,0 +1,22 @@
+{
+  "name": "bdd-simple",
+  "description": "BDD simple test",
+  "sourcePaths": ["source"],
+  "targetName": "bdd-simple",
+  "targetType": "executable",
+  "subPackages": [
+    {
+      "name": "test",
+      "targetName": "checkit-test",
+      "description": "Test bdd",
+      "targetType": "executable",
+      "buildOptions": ["unittests", "coverage"],
+      "mainSourceFile": "test/main.d",
+      "sourcePaths": ["source", "test"],
+      "excludedSourceFiles": ["source/main.d"],
+      "dependencies": {
+		    "checkit": "~>0.0.4"
+      }
+    }
+  ]
+}

@@ -7,24 +7,31 @@
 module checkit.reporter;
 
 import checkit.block;
+import std.conv: to;
 import std.stdio;
 import std.string;
-import std.conv;
 
+/// Reporter interface
 interface ReporterInterface
 {
   public:
+    /// Report success test block
     void success(TestBlock block);
+    /// Report fail test block
     void fail(TestBlock block);
+    /// Report fail message
     void fail(string message);
+    /// Print result of testing proccess
     void printResults(TestBlock[] successBlocks, TestBlock[] failBlocks);
-
+    /// Set verbose mode - more information
     void setVerbose(bool verbose);
 }
 
+/// Color reporter for console output
 class ConsoleReporter: ReporterInterface
 {
   public:
+    /// Report success test block
     void success(TestBlock block)
     {
       if(_verbose)
@@ -58,8 +65,14 @@ class ConsoleReporter: ReporterInterface
       }
     }
 
+    /// Report fail test block
     void fail(TestBlock block)
     {
+      if(!_verbose)
+      {
+        writeln();
+      }
+
       if(auto scenario = cast(ScenarioBlock) block)
       { 
         writeln();
@@ -79,6 +92,7 @@ class ConsoleReporter: ReporterInterface
       }
     }
 
+    /// Report fail message
     void fail(string message)
     {
       writeln(
@@ -89,6 +103,12 @@ class ConsoleReporter: ReporterInterface
           );
     }
 
+    /** Print result of testing proccess
+
+      Params:
+        successBlocks = Test that run success.
+        failBlocks = Test that run fail.
+    */
     void printResults(TestBlock[] successBlocks, TestBlock[] failBlocks)
     {
       writeln();
@@ -100,6 +120,11 @@ class ConsoleReporter: ReporterInterface
             getColor(ConsoleColor.INITIAL)));
     }
 
+    /** Set verbose mode - more information
+
+      Params:
+        verbose = Set more information.
+    */
     void setVerbose(bool verbose)
     {
       _verbose = verbose;
@@ -145,5 +170,6 @@ class ConsoleReporter: ReporterInterface
       }
     }
 
+    /// Is verbose mode
     bool _verbose;
 }

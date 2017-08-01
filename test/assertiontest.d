@@ -644,3 +644,22 @@ unittest
 
   expectedFunction.shouldRunLess(1.seconds);
 }
+
+/// shouldRunLess - should fail when function run greater time
+unittest
+{
+  void expectedFunction()
+  {
+    Thread.sleep(2.msecs);
+  }
+
+  try
+  {
+    expectedFunction.shouldRunLess(1.msecs);
+    assert(false);
+  }
+  catch(UnitTestException e)
+  {
+    assert(true);
+  }
+}

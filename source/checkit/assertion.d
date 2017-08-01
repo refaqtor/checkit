@@ -8,13 +8,13 @@ module checkit.assertion;
 
 import checkit.exception;
 import core.exception;
+import core.time;
 import std.algorithm.comparison: max, min;
+import std.conv;
+import std.datetime;
 import std.range;
 import std.string;
 import std.traits;
-import std.conv;
-import core.time;
-import std.datetime;
 
 private void fail(in string output, in string file, in size_t line) @safe pure
 {
@@ -819,9 +819,31 @@ void shouldBeEqualJSON( in string actual,
   }
 }
 
-void shouldRunLess(E)(lazy E condition, in Duration time, in string message = null, in string file = __FILE__, in size_t line = __LINE__)
+/** Used to assert that expression should be run less duration
+
+  Params:
+    condition = The run expression.
+    time = The maximum duration or running.
+    message = Exception message.
+    file = The file name that the assert failed in. Should be left as default.
+    line = The file line that the assert failed in. Should be left as default.
+
+  Throws:
+    If expression run greater time, will throw an UnitTestException.
+
+  Examples:
+    ---
+    // Will throw an exception like "UnitTestException@example.d(6): Expected run time <1 seconds>, but run <2 seconds>
+    {Thread.sleep(2.seconds)}.shouldRunLess(1.seconds);
+    ---
+*/
+void shouldRunLess(E)(lazy E condition, 
+                      in Duration time, 
+                      in string message = null, 
+                      in string file = __FILE__, 
+                      in size_t line = __LINE__)
 {
-  auto startTime = Clock.currTime();
+  immutable auto startTime = Clock.currTime();
   condition();
   
   auto delta = Clock.currTime() - startTime;

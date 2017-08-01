@@ -17,7 +17,6 @@
       "description": "Tests for checkit",
       "targetType": "executable",
       "buildOptions": ["unittests", "coverage"],
-      "mainSourceFile": "test/main.d",
       "sourcePaths": ["source", "test"]
     }
   ]

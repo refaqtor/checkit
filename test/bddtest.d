@@ -55,13 +55,21 @@ unittest
       ({
         then!"I should be served a coffee"
         ({
+          throw new Exception("sdsdf");
         });
       });
     });
+    then!"Error block"
+    ({
+    });
   });
 
-  auto reporter = new ConsoleReporter;
-  reporter.setVerbose(true);
-  auto runner = new BDDTestRunner!BlockManager(reporter);
-  runner.run();
+  assert(runTests(["test", "-v"]) == -1);
+  assert(runTests(["test"]) == 0);
+}
+
+/// Run test quite
+unittest
+{
+
 }

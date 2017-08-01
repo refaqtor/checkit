@@ -7,27 +7,56 @@
 module checkit.runner;
 
 import checkit.block;
-import checkit.reporter;
 import checkit.blockmanager;
-
-import std.stdio;
+import checkit.reporter;
 import std.conv;
 import std.getopt;
+import std.stdio;
 
+/// Interface for running test
 interface RunnerInterface
 {
   public:
+    /// Run tests and return code
     int run();
 }
 
+/** Provide run BDD tests
+
+  Params:
+    T = BlockManagerInterface
+*/
 class BDDTestRunner(T): RunnerInterface
 {
   public:
+    /** Constructor
+
+      Params:
+        reporter = Provide reporting test.
+
+      Examples:
+        ---
+        auto reporter = new ConsoleReporter();
+        auto runner = new BDDTestRunner!(reporter);
+        ---
+    */
     this(ReporterInterface reporter)
     {
       _reporter = reporter;
     }
 
+    /** Run tests and return code
+
+    Returns:
+        Return code $(D int) for main function
+
+      Examples:
+        ---
+        auto reporter = new ConsoleReporter();
+        auto runner = new BDDTestRunner!(reporter);
+        runner.run();
+        ---
+    */
     int run()
     {
       _returnCode = 0;
@@ -124,7 +153,7 @@ int runTests(string[] args)
 {
   bool verbose = false;
 
-  auto argumentInformation = getopt(
+  getopt(
     args,
     "verbose|v", &verbose
   );
