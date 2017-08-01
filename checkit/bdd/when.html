@@ -1,0 +1,37 @@
+<!DOCTYPE html><html><head>
+<meta charset="UTF-8"/>
+<title>Function when</title>
+<link rel="stylesheet" type="text/css" href="../../styles/ddox.css"/>
+<link rel="stylesheet" href="../../prettify/prettify.css" type="text/css"/>
+<script type="text/javascript" src="../../scripts/jquery.js">/**/</script><script type="text/javascript" src="../../scripts/ddox.js">/**/</script></head><body onload="setupDdox();"><nav id="main-nav"><noscript><p style="color: red">The search functionality needs JavaScript enabled</p></noscript><div id="symbolSearchPane" style="display: none"><form action="#" method="GET">
+<input id="symbolSearch" type="text" name="q" placeholder="Search for symbols" autocomplete="off" onchange="performSymbolSearch(40);" onkeypress="this.onchange();" onpaste="this.onchange();" oninput="this.onchange();"/></form><ul id="symbolSearchResults" class="symbolList" style="display: none"></ul><script type="application/javascript" src="../../symbols.js"></script><script type="application/javascript">var symbolSearchRootDir = "../../";
+$('#symbolSearchPane').show();</script></div><ul class="tree-view"><li class="tree-view "><div class="package "><a href="../../checkit.html">checkit</a></div><ul class="tree-view"><li><div class="module "><a href="../../checkit/assertion.html">assertion</a></div></li><li><div class="module selected"><a href="../../checkit/bdd.html">bdd</a></div></li><li><div class="module "><a href="../../checkit/block.html">block</a></div></li><li><div class="module "><a href="../../checkit/blockmanager.html">blockmanager</a></div></li><li><div class="module "><a href="../../checkit/exception.html">exception</a></div></li><li><div class="module "><a href="../../checkit/mock.html">mock</a></div></li><li><div class="module "><a href="../../checkit/reporter.html">reporter</a></div></li><li><div class="module "><a href="../../checkit/runner.html">runner</a></div></li></ul></li></ul></nav><div id="main-contents"><h1>Function when</h1><p>Used for WHEN block BDD
+</p><div class="prototype"><code class="lang-d"><div class="single-prototype">
+<span class="typ">void</span> <span class="pln">when</span>(<span class="typ">string</span> name, T, V)
+<span class="pun">(</span>
+<br/>
+&nbsp;&nbsp;<span class="kwd">lazy </span><span class="pln">T</span> <span class="pln">expression</span>
+<br/>
+<span class="pun">)</span><span class="pun">;</span></div></code></div><section></section>
+
+<section><h2>Parameters</h2>
+<table><col class="caption"><tr><th>Name</th><th>Description</th></tr>
+<tr><td id="name">name</td><td> Name of scenario.</td></tr>
+<tr><td id="expression">expression</td><td> Tested block.</td></tr>
+<tr><td id="V">V</td><td> BlockManagerInterface for collecting blocks</td></tr>
+</table>
+</section>
+<section><h2>Examples</h2>
+<pre class="code"><code class="lang-d"><span class="pln">when</span><span class="pun">!</span><span class="str">"Test when"
+</span><span class="pun">({
+  </span><span class="pln">writeln</span><span class="pun">(</span><span class="str">"TEST"</span><span class="pun">);
+});</span></code></pre>
+</section>
+
+<footer><table class="license-info"><tr><th>Authors</th><td><p>LLC CERERIS
+</p>
+</td></tr><tr><th>Copyright</th><td><p>2017 © LLC CERERIS
+</p>
+</td></tr><tr><th>License</th><td><p>MIT
+</p>
+</td></tr></table><p class="faint">Generated using the DDOX documentation generator</p></footer></div></body></html>
