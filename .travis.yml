@@ -18,6 +18,7 @@ script:
   - dub build --build=ddox
   - cd examples/bdd-simple
   - dub run bdd-simple:test
+  - cd ../../
 deploy:
   provider: pages
   skip_cleanup: true
